@@ -1,25 +1,23 @@
+// useStockData.js — timeframe-aware data hook
 import { useEffect, useMemo, useState } from 'react'
 import { mockSeries } from '../data/mockPrices'
 
 /**
- * Attempts to fetch recent intraday prices for a symbol.
- * Falls back to mock data if:
- *  - no API key is provided
- *  - request fails (CORS, network, etc.)
- *
- * Usage: const { series, latest, changePct, loading } = useStockData('NVDA')
+ * useStockData(symbol, options)
+ * options:
+ *   - { range: '1D' | '1W' | '1M' }
+ *   - { range: 'CUSTOM', start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
  */
-export default function useStockData(symbol = 'NVDA') {
+export default function useStockData(symbol = 'NVDA', options = { range: '1D' }) {
   const [series, setSeries] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-
     async function run() {
       setLoading(true)
 
-      // Example: Finnhub (requires an API key); you can swap to any provider you prefer.
+      // Try live (quote) for the latest point; synthesize series around it for the chosen range.
       const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_KEY
       const url = FINNHUB_KEY
         ? `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`
@@ -30,32 +28,37 @@ export default function useStockData(symbol = 'NVDA') {
           const r = await fetch(url)
           if (!r.ok) throw new Error('bad response')
           const data = await r.json()
-          // Finnhub returns: c (current), pc (previous close). We'll synthesize a tiny series.
           const now = new Date()
-          const base = data.pc ?? 100
-          const cur = data.c ?? base
-          const pts = [
-            { time: timeLabel(offsetMin(now, -45)), price: base * 0.997 },
-            { time: timeLabel(offsetMin(now, -30)), price: base * 1.002 },
-            { time: timeLabel(offsetMin(now, -15)), price: (base + cur) / 2 },
-            { time: timeLabel(now),                price: cur },
-          ]
+          const pc = data?.pc ?? 100
+          const c = data?.c ?? pc
+
+          // Generate a synthetic series around pc..c for the requested range.
+          const pts = mockSeries({
+            range: options?.range ?? '1D',
+            start: options?.start,
+            end: options?.end,
+            anchorStart: pc,
+            anchorEnd: c,
+            now
+          })
           if (!cancelled) setSeries(pts)
         } else {
-          // Fallback mock data
-          if (!cancelled) setSeries(mockSeries())
+          // Pure mock
+          const pts = mockSeries(options)
+          if (!cancelled) setSeries(pts)
         }
-      } catch (e) {
-        // Fallback mock on any failure
-        if (!cancelled) setSeries(mockSeries())
+      } catch {
+        // Fallback to mock on any failure
+        const pts = mockSeries(options)
+        if (!cancelled) setSeries(pts)
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
-
     run()
     return () => { cancelled = true }
-  }, [symbol])
+    // react to symbol or timeframe changes
+  }, [symbol, options?.range, options?.start, options?.end])
 
   const latest = useMemo(() => series.at(-1)?.price, [series])
   const first = useMemo(() => series[0]?.price, [series])
@@ -66,15 +69,4 @@ export default function useStockData(symbol = 'NVDA') {
   }, [latest, first])
 
   return { series, latest, changePct, loading }
-}
-
-function timeLabel(d) {
-  const hh = d.getHours().toString().padStart(2,'0')
-  const mm = d.getMinutes().toString().padStart(2,'0')
-  return `${hh}:${mm}`
-}
-function offsetMin(d, m) {
-  const t = new Date(d)
-  t.setMinutes(t.getMinutes() + m)
-  return t
 }

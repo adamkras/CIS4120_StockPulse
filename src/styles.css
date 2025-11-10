@@ -116,3 +116,8 @@
   .price-up { color: var(--success); }
   .price-down { color: var(--error); }
   
+  .tab.active { 
+    background: var(--accent1); 
+    color: var(--primary); 
+    box-shadow: 0 0 0 2px rgba(91,192,190,0.3) inset;
+  }
