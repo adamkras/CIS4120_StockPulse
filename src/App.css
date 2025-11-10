@@ -1,42 +1,65 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+/* App.css — Legacy Vite template styles
+   - Primarily retained for backward compatibility and optional demo assets
+   - The main project styles live in styles.css
+   - This file provides a minimal fallback layout and logo animation
+*/
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* === Root Layout ===
+   Centers content and constrains maximum width on large screens */
+   #root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
   }
-  to {
-    transform: rotate(360deg);
+  
+  /* === Logo Styling ===
+     Used in the default Vite landing screen (not active in final app)
+     Includes hover glow and rotation animation for React logo */
+  .logo {
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;         /* Hint browser that the filter property animates */
+    transition: filter 300ms;    /* Smooth hover transition */
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  
+  /* Blue glow on hover (default logo) */
+  .logo:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
+  
+  /* Cyan glow on hover for the React-specific logo */
+  .logo.react:hover {
+    filter: drop-shadow(0 0 2em #61dafbaa);
+  }
+  
+  /* === Logo Rotation Animation ===
+     Spins continuously for the React logo in motion-friendly environments */
+  @keyframes logo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Only apply animation if user has not enabled reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    a:nth-of-type(2) .logo {
+      animation: logo-spin infinite 20s linear;
+    }
+  }
+  
+  /* === Card Container ===
+     Generic padding utility for demo cards */
+  .card {
+    padding: 2em;
+  }
+  
+  /* === Placeholder Text ===
+     Used in Vite’s default "read the docs" link */
+  .read-the-docs {
+    color: #888;
+  }
+  

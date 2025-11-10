@@ -1,18 +1,40 @@
+<!--
+  index.html — Main HTML entry point for StockPulse
+  - Defines document structure and mounts the React app
+  - Loads custom fonts (Inter and Outfit) for consistent styling
+  - Entry script uses Vite's module bundling to start the React app
+-->
+
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- === Meta Configuration === -->
+    <!-- Character encoding and responsive viewport for modern browsers -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Page title displayed in browser tab -->
     <title>StockPulse</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- === Font Imports === -->
+    <!-- Preconnect improves performance for Google Fonts requests -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Import Inter (body) and Outfit (headers) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@300;500;700&display=swap"
       rel="stylesheet"
-    >
+    />
   </head>
+
   <body>
+    <!-- === React Mount Point ===
+         React components render inside this root div. -->
     <div id="root"></div>
+
+    <!-- === Vite Entry Script ===
+         Loads and executes the main React app entry file. -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
