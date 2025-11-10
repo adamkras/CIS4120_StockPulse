@@ -45,6 +45,16 @@ export default function DiscussionFeed() {
     })
   }
 
+  const deletePost = (id) => {
+    setPosts(ps => ps.filter(p => p.id !== id))
+    // also clean up likedIds if present
+    setLikedIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }
+
   return (
     <div>
       <div className="space-between">
@@ -100,6 +110,17 @@ export default function DiscussionFeed() {
               >
                 <ThumbsUp size={14} /> {p.likes}
               </button>
+              {p.user === '@you' && (
+                <button
+                  type="button"
+                  onClick={() => deletePost(p.id)}
+                  className="btn ghost"
+                  style={{padding:'6px 10px', marginLeft: 8}}
+                  title="Delete post"
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
           <div style={{marginTop: 6}}>{p.body}</div>
