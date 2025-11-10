@@ -48,7 +48,7 @@ By separating logic (`hooks/`), visuals (`components/`), and data mocks (`data/`
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 | Category | Tools & Frameworks |
 |-----------|--------------------|
 | **Frontend Framework** | React + Vite |
@@ -58,13 +58,9 @@ By separating logic (`hooks/`), visuals (`components/`), and data mocks (`data/`
 | **Styling** | CSS variables + custom utility classes |
 | **Languages** | JavaScript (ES6+), JSX, HTML, CSS |
 
-> Optional: Add a `.env` file with a Finnhub API key to enable live quote data:  
-> `VITE_FINNHUB_KEY=your_api_key_here`  
-> The app automatically falls back to mock data if unavailable.
-
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 ```bash
 # 1. Clone the repository
 git clone https://github.com/yourusername/stockpulse.git
