@@ -1,72 +1,66 @@
-// useStockData.js — timeframe-aware data hook
-import { useEffect, useMemo, useState } from 'react'
-import { mockSeries } from '../data/mockPrices'
+// src/hooks/useStockData.js
+import { useEffect, useState } from 'react'
 
-/**
- * useStockData(symbol, options)
- * options:
- *   - { range: '1D' | '1W' | '1M' }
- *   - { range: 'CUSTOM', start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
- */
-export default function useStockData(symbol = 'NVDA', options = { range: '1D' }) {
-  const [series, setSeries] = useState([])
-  const [loading, setLoading] = useState(true)
+const FINNHUB_BASE = 'https://finnhub.io/api/v1'
+
+export function useStockData(symbol, options = {}) {
+  const { resolution = 'D', count = 100 } = options
+
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    let cancelled = false
-    async function run() {
-      setLoading(true)
+    if (!symbol) return
 
-      // Try live (quote) for the latest point; synthesize series around it for the chosen range.
-      const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_KEY
-      const url = FINNHUB_KEY
-        ? `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`
-        : null
+    const controller = new AbortController()
+    const token = import.meta.env.VITE_FINNHUB_API_KEY
+
+    async function fetchData() {
+      setLoading(true)
+      setError(null)
 
       try {
-        if (url) {
-          const r = await fetch(url)
-          if (!r.ok) throw new Error('bad response')
-          const data = await r.json()
-          const now = new Date()
-          const pc = data?.pc ?? 100
-          const c = data?.c ?? pc
+        const url = new URL(`${FINNHUB_BASE}/stock/candle`)
+        url.searchParams.set('symbol', symbol.toUpperCase())
+        url.searchParams.set('resolution', resolution)
+        url.searchParams.set('count', count.toString())
+        url.searchParams.set('token', token ?? '')
 
-          // Generate a synthetic series around pc..c for the requested range.
-          const pts = mockSeries({
-            range: options?.range ?? '1D',
-            start: options?.start,
-            end: options?.end,
-            anchorStart: pc,
-            anchorEnd: c,
-            now
-          })
-          if (!cancelled) setSeries(pts)
-        } else {
-          // Pure mock
-          const pts = mockSeries(options)
-          if (!cancelled) setSeries(pts)
+        const res = await fetch(url, { signal: controller.signal })
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}`)
         }
-      } catch {
-        // Fallback to mock on any failure
-        const pts = mockSeries(options)
-        if (!cancelled) setSeries(pts)
+
+        const json = await res.json()
+
+        // Finnhub candle returns { s: "ok"|"no_data"|..., t: [], c: [] }
+        if (json.s !== 'ok' || !Array.isArray(json.t) || !Array.isArray(json.c)) {
+          throw new Error('No data available for this symbol')
+        }
+
+        const points = json.t.map((ts, idx) => ({
+          time: new Date(ts * 1000).toISOString().slice(0, 10), // yyyy-mm-dd
+          price: json.c[idx],
+        }))
+
+        setData(points)
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to fetch stock data:', err)
+          setError(err)
+          setData([])
+        }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
-    run()
-    return () => { cancelled = true }
-    // react to symbol or timeframe changes
-  }, [symbol, options?.range, options?.start, options?.end])
 
-  const latest = useMemo(() => series.at(-1)?.price, [series])
-  const first = useMemo(() => series[0]?.price, [series])
+    fetchData()
+    return () => controller.abort()
+  }, [symbol, resolution, count])
 
-  const changePct = useMemo(() => {
-    if (!latest || !first) return 0
-    return ((latest - first) / first) * 100
-  }, [latest, first])
-
-  return { series, latest, changePct, loading }
+  return { data, loading, error }
 }

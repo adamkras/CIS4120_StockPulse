@@ -1,174 +1,232 @@
-// DiscussionFeed.jsx — Minimal discussion UI with filters, composer, likes (toggle), and delete
-// - Displays a list of posts (mock + user-submitted)
-// - Lets users filter by tag, like/unlike posts, and delete their own posts (@you)
+// DiscussionFeed.jsx — symbol-scoped discussion with persistent posts + likes
+// - Threads keyed by symbol in localStorage ("sp_discussion_v1")
+// - Each stock gets its own thread; no stock => GLOBAL thread
+// - New posts and like counts survive navigation & reloads
 
-import { useMemo, useState } from 'react'
-import { mockPosts as initialPosts } from '../data/mockPosts'
+import { useEffect, useMemo, useState } from 'react'
 import { ThumbsUp, Send, Filter } from 'lucide-react'
+import { mockPosts as initialPosts } from '../data/mockPosts'
 
-// Category tabs (used to filter the visible post list)
 const TAGS = ['All', 'Bullish', 'Bearish']
+const STORAGE_KEY = 'sp_discussion_v1'
 
-export default function DiscussionFeed() {
-  // === UI/Filter state ===
-  const [active, setActive] = useState('All')         // which tab is selected
-  // === Data state ===
-  const [posts, setPosts] = useState(initialPosts)    // visible post list
-  // === Composer state ===
-  const [text, setText] = useState('')                // text input for new post
-  const [tag, setTag] = useState('Bullish')           // tag for new post
-  // Track which posts are liked by the current user (for toggle behavior + aria)
-  const [likedIds, setLikedIds] = useState(new Set())
+// ----- helpers to read/write LS -----
+function loadThreads() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
 
-  // === Derived list according to active filter ===
-  const filtered = useMemo(() => {
-    return active === 'All' ? posts : posts.filter(p => p.tag === active)
-  }, [active, posts])
+function saveThreads(threads) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(threads))
+  } catch {
+    // ignore quota / privacy errors
+  }
+}
 
-  // === Handlers ===
+export default function DiscussionFeed({ symbol }) {
+  // Use stock symbol if provided; otherwise one shared GLOBAL thread
+  const symbolKey = useMemo(
+    () => (symbol && symbol.trim() ? symbol.toUpperCase() : 'GLOBAL'),
+    [symbol]
+  )
 
-  // Submit handler: prepend a new post to the feed
-  const submit = (e) => {
-    e.preventDefault()
-    const trimmed = text.trim()
-    if (!trimmed) return
-    const p = {
-      id: crypto.randomUUID(),
+  // threads: { [symbolKey]: Post[] }
+  const [threads, setThreads] = useState(() => loadThreads())
+  const [activeTag, setActiveTag] = useState('All')
+  const [text, setText] = useState('')
+  const [tag, setTag] = useState('Bullish')
+
+  // Persist whenever any thread changes
+  useEffect(() => {
+    saveThreads(threads)
+  }, [threads])
+
+  // Posts for the current symbol (fall back to mockPosts if none saved yet)
+  const postsForSymbol = threads[symbolKey] ?? initialPosts
+  const filtered = useMemo(
+    () =>
+      activeTag === 'All'
+        ? postsForSymbol
+        : postsForSymbol.filter((p) => p.tag === activeTag),
+    [postsForSymbol, activeTag]
+  )
+
+  // ----- state update helpers (always scoped to current symbolKey) -----
+
+  const updateThread = (updater) => {
+    setThreads((prev) => {
+      const current = prev[symbolKey] ?? initialPosts
+      const nextThread = updater(current)
+      return { ...prev, [symbolKey]: nextThread }
+    })
+  }
+
+  const handlePost = () => {
+    const body = text.trim()
+    if (!body) return
+
+    const newPost = {
+      id: Date.now(),
       user: '@you',
-      minutesAgo: 0,   // could be swapped for a timestamp -> "time ago" formatter
-      likes: 0,
       tag,
-      body: trimmed,
+      body,
+      minutesAgo: 0,
+      likes: 0,
+      liked: false,
     }
-    setPosts([p, ...posts])
+
+    updateThread((current) => [newPost, ...current])
     setText('')
   }
 
-  // Toggle like/unlike for a post id
-  const like = (id) => {
-    // Update like count in posts
-    setPosts(ps => ps.map(p => {
-      if (p.id !== id) return p
-      const isLiked = likedIds.has(id)
-      return { ...p, likes: Math.max(0, isLiked ? p.likes - 1 : p.likes + 1) }
-    }))
-    // Update local likedIds set
-    setLikedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  const toggleLike = (id) => {
+    updateThread((current) =>
+      current.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              liked: !p.liked,
+              likes: p.liked ? Math.max(0, p.likes - 1) : p.likes + 1,
+            }
+          : p
+      )
+    )
   }
 
-  // Remove a post by id (only for posts authored by '@you')
   const deletePost = (id) => {
-    setPosts(ps => ps.filter(p => p.id !== id))
-    // Keep likedIds clean if the post was liked
-    setLikedIds(prev => {
-      const next = new Set(prev)
-      next.delete(id)
-      return next
-    })
+    updateThread((current) => current.filter((p) => !(p.id === id && p.user === '@you')))
   }
 
-  // === Render ===
+  // ----- UI -----
   return (
-    <div>
-      {/* Header with a small "filters" affordance */}
-      <div className="space-between">
-        <h3>Live Discussion</h3>
-        <div className="row small"><Filter size={14}/> filters</div>
+    <div className="discussion">
+      {/* Filters */}
+      <div className="space-between" style={{ marginBottom: 10 }}>
+        <div className="row" style={{ gap: 8 }}>
+          {TAGS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={`tab ${activeTag === t ? 'active' : ''}`}
+              style={{ border: 'none', fontSize: 12 }}
+              onClick={() => setActiveTag(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <span className="small" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Filter size={14} />
+          Filter
+        </span>
       </div>
 
-      {/* Tabs for All / Bullish / Bearish */}
-      <div className="tabs" style={{marginTop: 8}} role="tablist" aria-label="Discussion filters">
-        {TAGS.map(t => (
-          <div
-            key={t}
-            role="tab"
-            tabIndex={0}
-            aria-selected={active === t}
-            className={`tab ${active === t ? 'active' : ''}`}
-            onClick={() => setActive(t)}
-            onKeyDown={(e) => e.key === 'Enter' && setActive(t)}
+      {/* Composer */}
+      <div className="composer" style={{ marginBottom: 12 }}>
+        <div className="row" style={{ marginBottom: 6, gap: 8 }}>
+          <span className="small" style={{ fontWeight: 600 }}>
+            Tag
+          </span>
+          <select
+            className="input"
+            style={{ maxWidth: 130, padding: '6px 8px' }}
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
           >
-            {t}
-          </div>
-        ))}
-      </div>
+            <option value="Bullish">Bullish</option>
+            <option value="Bearish">Bearish</option>
+          </select>
+        </div>
 
-      {/* Composer (tag select + text input + Post button) */}
-      <form onSubmit={submit} className="row" style={{gap: 8, marginBottom: 12}}>
-        <label className="small" htmlFor="post-tag" style={{position:'absolute', left:-9999}}>Tag</label>
-        <select
-          id="post-tag"
+        <textarea
           className="input"
-          style={{maxWidth: 120}}
-          value={tag}
-          onChange={e => setTag(e.target.value)}
-        >
-          <option>Bullish</option>
-          <option>Bearish</option>
-        </select>
-
-        <label className="small" htmlFor="post-text" style={{position:'absolute', left:-9999}}>Post text</label>
-        <input
-          id="post-text"
-          className="input"
-          placeholder="Write your post…"
+          rows={3}
+          placeholder={
+            symbolKey === 'GLOBAL'
+              ? `Share a ${tag.toLowerCase()} market take…`
+              : `Share a ${tag.toLowerCase()} take on ${symbolKey}…`
+          }
           value={text}
-          onChange={e => setText(e.target.value)}
+          onChange={(e) => setText(e.target.value)}
+          style={{ resize: 'vertical', marginBottom: 8 }}
         />
 
-        <button className="btn" type="submit" aria-label="Publish post">
-          <Send size={16}/> Post
-        </button>
-      </form>
+        <div className="space-between">
+          <span className="small">@you</span>
+          <button
+            type="button"
+            className="btn"
+            onClick={handlePost}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Send size={14} />
+            Post
+          </button>
+        </div>
+      </div>
 
-      {/* Post list */}
-      {filtered.map(p => (
-        <article key={p.id} className="post" aria-live="polite">
-          <div className="space-between">
-            {/* Author + tag + timestamp */}
-            <div className="meta">
-              <strong>{p.user}</strong>
-              <span className={`tag ${p.tag}`}> {p.tag}</span>
-              <span> • {p.minutesAgo}m ago</span>
+      {/* Posts */}
+      <div>
+        {filtered.map((p) => (
+          <article key={p.id} className="post">
+            <div className="space-between" style={{ marginBottom: 4 }}>
+              <div className="small">
+                <span style={{ fontWeight: 600 }}>{p.user}</span>
+                <span className={`tag ${p.tag}`} style={{ marginLeft: 8 }}>
+                  {p.tag}
+                </span>
+              </div>
+              <span className="small" style={{ opacity: 0.8 }}>
+                {p.minutesAgo}m ago
+              </span>
             </div>
 
-            {/* Actions: like toggle + (if owner) delete */}
-            <div className="row small">
+            <p style={{ margin: '4px 0 10px', fontSize: 14, lineHeight: 1.4 }}>{p.body}</p>
+
+            <div className="space-between">
               <button
                 type="button"
-                onClick={() => like(p.id)}
-                className={`btn ghost ${likedIds.has(p.id) ? 'active' : ''}`}
-                style={{padding:'6px 10px'}}
-                title="Like"
-                aria-pressed={likedIds.has(p.id)}
+                className={`btn ghost ${p.liked ? 'active' : ''}`}
+                onClick={() => toggleLike(p.id)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                <ThumbsUp size={14} /> {p.likes}
+                <ThumbsUp size={14} />
+                <span className="small">{p.likes}</span>
               </button>
 
               {p.user === '@you' && (
                 <button
                   type="button"
+                  className="small"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#BFD3E0',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
                   onClick={() => deletePost(p.id)}
-                  className="btn ghost"
-                  style={{padding:'6px 10px', marginLeft: 8}}
-                  title="Delete post"
-                  aria-label="Delete your post"
                 >
                   Delete
                 </button>
               )}
             </div>
-          </div>
+          </article>
+        ))}
 
-          {/* Body */}
-          <div style={{marginTop: 6}}>{p.body}</div>
-        </article>
-      ))}
+        {filtered.length === 0 && (
+          <p className="small" style={{ opacity: 0.8, marginTop: 6 }}>
+            No posts yet. Be the first to share a view.
+          </p>
+        )}
+      </div>
     </div>
   )
 }

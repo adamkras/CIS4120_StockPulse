@@ -1,41 +1,36 @@
 // Navbar.jsx — App header with brand title and navigation links
-// - Displays the app logo/name ("StockPulse")
-// - Provides navigation buttons for Home and Stock pages
-// - Includes a placeholder Profile icon button (non-functional, for future user features)
 
 import { LineChart, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 export default function Navbar() {
-  // === Router location ===
-  // useLocation() gives access to the current URL path to mark the active tab
   const { pathname } = useLocation()
+
+  const isHome = pathname === '/'
+  const isStock = pathname.startsWith('/stock')
+  const isProfile = pathname.startsWith('/profile')
 
   return (
     <div className="header">
-      {/* === Brand / Logo Section === */}
+      {/* Brand / Logo */}
       <div className="row" style={{ alignItems: 'center', gap: 8 }}>
-        {/* Lucide LineChart icon used as a lightweight logo */}
         <LineChart size={22} />
         <h1>StockPulse</h1>
       </div>
 
-      {/* === Navigation Section === */}
+      {/* Nav buttons */}
       <div className="row" style={{ gap: 14 }}>
-        {/* Link to Home (active when pathname === "/") */}
-        <NavButton to="/" active={pathname === '/'}>
+        <NavButton to="/" active={isHome}>
           Home
         </NavButton>
 
-        {/* Link to Stock (active when pathname starts with "/stock") */}
-        <NavButton to="/stock" active={pathname.startsWith('/stock')}>
+        <NavButton to="/stock" active={isStock}>
           Stock
         </NavButton>
 
-        {/* === Profile Icon Button ===
-            Placeholder for user profile or login in future versions.
-            Currently non-interactive, purely decorative. */}
-        <button
+        {/* Profile icon now routes to /profile */}
+        <Link
+          to="/profile"
           className="btn ghost"
           style={{
             padding: '8px',
@@ -43,24 +38,24 @@ export default function Navbar() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            borderColor: isProfile ? '#4fd1c5' : undefined,
+            background: isProfile ? 'rgba(79, 209, 197, 0.08)' : 'transparent',
           }}
           title="Profile"
           aria-label="User profile"
+          aria-current={isProfile ? 'page' : undefined}
         >
           <User size={20} strokeWidth={2.2} />
-        </button>
+        </Link>
       </div>
     </div>
   )
 }
 
-// === Reusable NavButton component ===
-// Wraps a <Link> styled as a button; highlights the active route.
 function NavButton({ to, active, children }) {
   return (
     <Link
       to={to}
-      // Use 'ghost' style when inactive for visual hierarchy
       className={`btn ${active ? '' : 'ghost'}`}
       style={{
         textDecoration: 'none',

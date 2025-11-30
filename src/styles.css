@@ -1,130 +1,257 @@
 :root {
-    /* StockPulse palette */
-    --primary: #0B132B;
-    --secondary: #1C2541;
-    --accent1: #5BC0BE;
-    --accent2: #FF6B6B;
-    --accent3: #3A506B;
-    --success: #27AE60;
-    --error:   #E74C3C;
-    --neutral: #F7F9FB;
-  
-    --radius: 10px;
-    --shadow: 0 6px 18px rgba(0,0,0,0.2);
-    --gap: 16px;
-  }
-  
-  * { box-sizing: border-box; }
-  html, body, #root { height: 100%; }
-  
-  body {
-    margin: 0;
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    background: var(--primary);
-    color: var(--neutral);
-  }
-  
-  h1, h2, h3 { font-family: Outfit, Inter, sans-serif; margin: 0 0 8px; }
-  h1 { font-weight: 700; }
-  h2, h3 { font-weight: 600; }
-  
-  .container {
-    max-width: 1100px;
-    margin: 32px auto;
-    padding: 0 20px;
-  }
-  
-  .header {
-    background: var(--secondary);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: var(--shadow);
-  }
-  
+  /* StockPulse palette */
+  --primary: #0B132B;
+  --secondary: #1C2541;
+  --accent1: #5BC0BE;
+  --accent2: #FF6B6B;
+  --accent3: #3A506B;
+  --success: #27AE60;
+  --error:   #E74C3C;
+  --neutral: #F7F9FB;
+
+  --radius: 10px;
+  --shadow: 0 6px 18px rgba(0,0,0,0.2);
+  --gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background: var(--primary);
+  color: var(--neutral);
+}
+
+/* Typography */
+
+h1, h2, h3 {
+  font-family: Outfit, Inter, sans-serif;
+  margin: 0 0 8px;
+}
+
+h1 { font-weight: 700; }
+h2, h3 { font-weight: 600; }
+
+.small {
+  font-size: 12px;
+  color: #BFD3E0;
+}
+
+/* Layout */
+
+.container {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 20px;
+}
+
+.header {
+  background: var(--secondary);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--gap);
+  margin-top: var(--gap);
+}
+
+.card {
+  background: var(--secondary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+/* Generic flex helpers */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Buttons */
+
+.btn {
+  background: var(--accent1);
+  color: var(--primary);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid var(--accent1);
+  color: var(--neutral);
+}
+
+/* Make ghost buttons visibly active when toggled (e.g., liked) */
+.btn.ghost.active {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+  box-shadow: 0 4px 10px rgba(39,174,96,0.12);
+}
+
+/* Badges */
+
+.badge { 
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(91,192,190,0.15);
+  color: var(--accent1);
+}
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  background: rgba(58,80,107,0.4);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--neutral);
+}
+
+.tab.active { 
+  background: var(--accent1); 
+  color: var(--primary); 
+  box-shadow: 0 0 0 2px rgba(91,192,190,0.3) inset;
+}
+
+/* Inputs */
+
+.input {
+  width: 100%;
+  background: #0f1a36;
+  border: 1px solid #2a3658;
+  color: var(--neutral);
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+/* Posts / Discussion feed */
+
+.post {
+  padding: 12px;
+  background: #0f1a36;
+  border: 1px solid #263253;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.post .meta {
+  color: #BFD3E0;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.post .tag {
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.tag.Bullish { color: var(--success); }
+.tag.Bearish { color: var(--error); }
+
+/* Price colors */
+
+.price-up { color: var(--success); }
+.price-down { color: var(--error); }
+
+/* Ticker chips (Trending / Favorites) */
+
+/* Ticker chip */
+.ticker-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #0f1a36;
+  border: 1px solid #263253;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Symbol */
+.ticker-chip__symbol {
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  color: var(--neutral);
+  cursor: pointer;
+}
+
+/* Star button */
+.ticker-chip__fav {
+  padding: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent1);
+}
+
+.ticker-chip.favorited {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.ticker-chip.favorited .ticker-chip__symbol {
+  color: var(--primary);
+}
+
+.ticker-chip.favorited .ticker-chip__fav svg {
+  color: var(--primary);
+  fill: var(--secondary);
+}
+
+/* Small responsive tweak */
+
+@media (max-width: 900px) {
   .grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--gap);
-    margin-top: var(--gap);
+    grid-template-columns: 1fr;
   }
-  
-  .card {
-    background: var(--secondary);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
-  
-  .btn {
-    background: var(--accent1);
-    color: var(--primary);
-    border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .btn.ghost {
-    background: transparent;
-    border: 1px solid var(--accent1);
-    color: var(--neutral);
-  }
-  /* Make ghost buttons visibly active when toggled (e.g., liked) */
-  .btn.ghost.active {
-    background: var(--success);
-    border-color: var(--success);
-    color: white;
-    box-shadow: 0 4px 10px rgba(39,174,96,0.12);
-  }
-  .badge { 
-    display:inline-flex; align-items:center; gap:6px;
-    padding: 6px 10px; border-radius: 999px; font-size: 12px;
-    background: rgba(91,192,190,0.15); color: var(--accent1);
-  }
-  
-  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-  .tab {
-    background: rgba(58,80,107,0.4);
-    padding: 8px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-weight: 600;
-  }
-  .tab.active { background: var(--accent1); color: var(--primary); }
-  
-  .input {
-    width: 100%;
-    background: #0f1a36;
-    border: 1px solid #2a3658;
-    color: var(--neutral);
-    padding: 10px 12px;
-    border-radius: 8px;
-  }
-  
-  .post {
-    padding: 12px;
-    background: #0f1a36;
-    border: 1px solid #263253;
-    border-radius: 10px;
-    margin-bottom: 10px;
-  }
-  .post .meta { color: #BFD3E0; font-size: 12px; margin-bottom: 4px; }
-  .post .tag { font-weight: 700; margin-left: 6px; }
-  .tag.Bullish { color: var(--success); }
-  .tag.Bearish { color: var(--error); }
-  
-  .row { display:flex; align-items:center; gap:10px; }
-  .space-between { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  
-  .small { font-size: 12px; color: #BFD3E0; }
-  .price-up { color: var(--success); }
-  .price-down { color: var(--error); }
-  
-  .tab.active { 
-    background: var(--accent1); 
-    color: var(--primary); 
-    box-shadow: 0 0 0 2px rgba(91,192,190,0.3) inset;
-  }
+}
