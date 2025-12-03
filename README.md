@@ -4,18 +4,17 @@
 **StockPulse** is an interactive React web application built with **Vite** that allows users to explore and analyze stock performance in a modern, visually engaging interface.  
 Users can **search for stock tickers**, **visualize live or mock price data**, and **participate in real-time discussions** about market sentiment.  
 
-The app combines **data visualization**, **social interactivity**, and **clean UI design**, demonstrating an understanding of **React architecture**, **UI/UX principles**, and **frontend performance optimization**.  
-
 ---
 
 ## Project Overview
-StockPulse was designed to emulate a lightweight, community-driven stock analysis platform — blending **financial visualization** with **social engagement**.  
+StockPulse blends financial analytics, community sentiment, and personalized dashboards into a cohesive, elegant interface. The app features:
 
-Key design goals:
-- **Clarity:** Use of consistent fonts, spacing, and alignment for a clean, readable layout.  
-- **Feedback:** Interactive visual cues like hover states, tooltips, and like buttons provide immediate user feedback.  
-- **Consistency:** Centralized color and font management through CSS variables in `styles.css`.  
-- **Scalability:** Modular React components that can be easily expanded with live data and authentication.  
+- Real-time price quotes (Finnhub API)
+- Historical market performance (Alpha Vantage)
+- Persistent discussion boards for each stock
+- Favorite tracking, view streaks, and custom profile stats
+- Comparison overlays for multiple tickers
+- A full design system: consistent color palette, spacing, typography
 
 ---
 
@@ -23,7 +22,7 @@ Key design goals:
 - **Navigation & Routing** – Multi-page app powered by `react-router-dom`, featuring Home, Stock, and Style Guide pages.
 - **Stock Visualization** – Responsive, dynamic line chart built with `Recharts`, supporting custom time frames (1 Day / 1 Week / 1 Month / Custom Date Range).
 - **Discussion Feed** – Interactive post system with likes, filters, and deletion, simulating a live community feed.
-- **Style Guide Page** – Built-in reference page displaying the app’s color palette, typography, and icons.
+- **Style Guide** – Built-in reference page displaying the app’s color palette, typography, and icons.
 - **Responsive Design** – Flexible grid and row layouts ensure usability across device sizes.
 - **Accessibility-Friendly Design** – Semantic HTML elements, labeled inputs, and color contrast awareness built into the design.
 
@@ -73,32 +72,37 @@ npm install
 npm run dev
 
 project-root/
- ├─ index.html              # Entry HTML file; loads React app (Vite root)
- ├─ package.json            # Project dependencies and scripts
- ├─ vite.config.js          # Vite configuration (if customized)
- ├─ README.md               # Documentation (this file)
- ├─ App.css                 # Legacy Vite styles (kept for fallback)
- ├─ styles.css              # Global app theme and component utilities
+ ├─ index.html
+ ├─ package.json
+ ├─ vite.config.js
+ ├─ styles.css           # Global theme + design system
+ ├─ App.css
  │
  └─ src/
+     ├─ App.jsx          # Layout + routes
+     ├─ main.jsx         # App bootstrap (BrowserRouter)
+     │
      ├─ components/
-     │   ├─ Navbar.jsx          # Header bar with app logo, navigation, and profile icon
-     │   ├─ Home.jsx            # Landing page with ticker search + trending stocks
-     │   ├─ StockPage.jsx       # Core view for price chart + discussion feed
-     │   ├─ StockChart.jsx      # Responsive line chart built with Recharts
-     │   ├─ DiscussionFeed.jsx  # User discussion posts, likes, filters, and deletion
-     │   └─ StyleGuide.jsx      # Visual reference for colors, fonts, and icons
+     │   ├─ Navbar.jsx
+     │   ├─ Home.jsx
+     │   ├─ Stock.jsx              # Live quote + chart + compare + favorites
+     │   ├─ StockChart.jsx         # Multi-series chart renderer
+     │   ├─ DiscussionFeed.jsx     # Posts, likes, delete, filters
+     │   ├─ Profile.jsx            # Full dashboard with analytics
+     │   └─ StyleGuide.jsx
      │
      ├─ data/
-     │   ├─ mockPosts.js        # Sample discussion data
-     │   └─ mockPrices.js       # Synthetic price data generator (supports multiple ranges)
+     │   ├─ finnhub.js             # Finnhub URL builder + key
+     │   ├─ alphavantage.js        # AV daily series fetcher
+     │   └─ mockPosts.js           # Seed posts for stocks
      │
      ├─ hooks/
-     │   └─ useStockData.js     # Custom hook to fetch or mock stock data dynamically
+     │   ├─ useAlphaDailySeries.js
+     │   ├─ useFavorites.js
+     │   ├─ useLocalStockSearch.js
+     │   └─ useStockData.js
      │
-     ├─ App.jsx                 # Main routing and layout shell
-     ├─ main.jsx                # React entry point wrapped in BrowserRouter
-     └─ styles.css              # Core design system (palette, grid, components)
+     └─ index.css
 ```
 
 ---
