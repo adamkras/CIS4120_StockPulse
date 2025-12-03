@@ -1,4 +1,4 @@
-// Profile.jsx — StockPulse "My Dashboard" (fun analytics)
+// Profile.jsx — StockPulse "My Dashboard"
 //
 // Shows:
 // - Market personality + streak
@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, BarChart3, TrendingUp, Crown } from 'lucide-react'
+import { Star, BarChart3, Crown } from 'lucide-react'
 import {
   ResponsiveContainer,
   PieChart,
@@ -26,12 +26,11 @@ import { buildFinnhubUrl, HAS_FINNHUB_KEY } from '../data/finnhub'
 
 const STORAGE_RECENT = 'sp_recent_tickers'
 const STORAGE_FAVORITES = 'sp_favorite_tickers'
-const STORAGE_POSTS = 'sp_discussions_v1'
+const STORAGE_POSTS = 'sp_posts_by_symbol_v2'
 const STORAGE_LAST_VISIT = 'sp_last_visit'
 const STORAGE_STREAK = 'sp_visit_streak'
 const STORAGE_VIEWS = 'sp_views_v1'
 
-// Very rough sector buckets for favorites
 const SECTOR_MAP = {
   Tech: ['AAPL', 'MSFT', 'NVDA', 'AMD', 'AMZN', 'GOOGL', 'META', 'SMCI', 'AVGO', 'NFLX'],
   Auto: ['TSLA', 'F', 'GM'],
@@ -44,7 +43,6 @@ const SECTOR_COLORS = ['#36CFC9', '#5B8DEF', '#A26BFF', '#FFB85C', '#FF6B6B']
 
 export default function Profile() {
   const navigate = useNavigate()
-
   const [recent, setRecent] = useState([])
   const [favorites, setFavorites] = useState([])
   const [postsBySymbol, setPostsBySymbol] = useState({})
@@ -52,7 +50,6 @@ export default function Profile() {
   const [quotes, setQuotes] = useState({})
   const [streak, setStreak] = useState(1)
 
-  // ---------- Load local data + handle streak ----------
   useEffect(() => {
     try {
       const r = JSON.parse(localStorage.getItem(STORAGE_RECENT) || '[]')
@@ -64,9 +61,7 @@ export default function Profile() {
       if (Array.isArray(f)) setFavorites(f)
       if (p && typeof p === 'object') setPostsBySymbol(p)
       if (Array.isArray(v)) setViewEvents(v)
-    } catch {
-      // ignore bad JSON
-    }
+    } catch {}
 
     const todayStr = new Date().toDateString()
     const last = localStorage.getItem(STORAGE_LAST_VISIT)
@@ -76,8 +71,7 @@ export default function Profile() {
     if (last) {
       const lastDate = new Date(last)
       const todayDate = new Date(todayStr)
-      const diffDays =
-        (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+      const diffDays = (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
 
       if (diffDays === 0) {
         nextStreak = prevStreak || 1
@@ -93,7 +87,6 @@ export default function Profile() {
     localStorage.setItem(STORAGE_LAST_VISIT, todayStr)
   }, [])
 
-  // ---------- Fetch quotes for favorites (for mood + movers) ----------
   useEffect(() => {
     if (!HAS_FINNHUB_KEY || favorites.length === 0) return
 
@@ -110,9 +103,7 @@ export default function Profile() {
             if (!res.ok) return
             const json = await res.json()
             results[symbol] = json
-          } catch {
-            // ignore individual failures
-          }
+          } catch {}
         })
       )
       if (!cancelled) setQuotes(results)
@@ -124,12 +115,7 @@ export default function Profile() {
     }
   }, [favorites])
 
-  // ---------- Derived stats ----------
-
-  const allPosts = useMemo(
-    () => Object.values(postsBySymbol).flat(),
-    [postsBySymbol]
-  )
+  const allPosts = useMemo(() => Object.values(postsBySymbol).flat(), [postsBySymbol])
   const totalPosts = allPosts.length
   const bullishPosts = allPosts.filter((p) => p.tag === 'Bullish').length
   const bearishPosts = allPosts.filter((p) => p.tag === 'Bearish').length
@@ -141,7 +127,6 @@ export default function Profile() {
       ? '🛡️ Risk Manager'
       : '📘 Balanced Strategist'
 
-  // sector counts
   const sectorCounts = {}
   Object.entries(SECTOR_MAP).forEach(([sector, tickers]) => {
     sectorCounts[sector] = favorites.filter((f) => tickers.includes(f)).length
@@ -156,7 +141,6 @@ export default function Profile() {
       ? sectorPieData.slice().sort((a, b) => b.value - a.value)[0].name
       : 'No clear bias yet'
 
-  // watchlist mood
   let green = 0
   let red = 0
   favorites.forEach((sym) => {
@@ -167,7 +151,6 @@ export default function Profile() {
     else if (diff < 0) red++
   })
 
-  // biggest movers (sorted by % change)
   const movers = favorites
     .map((sym) => {
       const q = quotes[sym]
@@ -181,7 +164,6 @@ export default function Profile() {
   const biggestWinner = movers[0]
   const biggestLoser = movers[movers.length - 1]
 
-  // 7-day view “heatmap” (really a bar chart)
   const heatmapData = useMemo(() => {
     const today = new Date()
     const data = []
@@ -210,9 +192,8 @@ export default function Profile() {
 
   return (
     <div className="profile" style={{ marginTop: 16 }}>
-      {/* Overview */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <h2>Your StockPulse Profile</h2>
+        <h2 style={{ marginBottom: 4 }}>Your StockPulse Profile</h2>
         <p className="small">
           Personalized stats based on your favorites, posts, and recent activity.
         </p>
@@ -234,10 +215,9 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Row: sector + mood */}
       <div className="grid">
         <div className="card">
-          <h3>Favorite Sector Mix</h3>
+          <h3 style={{ marginBottom: 4 }}>Favorite Sector Mix</h3>
           <p className="small">Based on your favorited tickers.</p>
 
           {sectorPieData.length === 0 ? (
@@ -264,12 +244,7 @@ export default function Profile() {
                         />
                       ))}
                     </Pie>
-                    <Tooltip
-                      formatter={(value, name) => [
-                        `${value} favorites`,
-                        name,
-                      ]}
-                    />
+                    <Tooltip formatter={(value, name) => [`${value} favorites`, name]} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -282,7 +257,7 @@ export default function Profile() {
         </div>
 
         <div className="card">
-          <h3>Watchlist Mood</h3>
+          <h3 style={{ marginBottom: 4 }}>Watchlist Mood</h3>
           <p className="small">How your favorites are doing today.</p>
 
           {!HAS_FINNHUB_KEY || favorites.length === 0 ? (
@@ -295,7 +270,7 @@ export default function Profile() {
             </p>
           ) : (
             <>
-              <h2 style={{ marginTop: 12 }}>
+              <h2 style={{ marginTop: 12, marginBottom: 4 }}>
                 {green}–{red}{' '}
                 {green >= red ? (
                   <span className="price-up">(Bullish tilt)</span>
@@ -316,7 +291,7 @@ export default function Profile() {
                 )}
                 {biggestLoser && (
                   <div className="small">
-                    <strong>Biggest drop:</strong> {biggestLoser.symbol}{' '}
+                    <strong>Bottom gainer:</strong> {biggestLoser.symbol}{' '}
                     <span className="price-down">
                       {biggestLoser.pct >= 0 ? '+' : ''}
                       {biggestLoser.pct.toFixed(2)}%
@@ -329,9 +304,8 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* 7-day activity heatmap */}
       <div className="card" style={{ marginTop: 16 }}>
-        <h3>Last 7 Days of Activity</h3>
+        <h3 style={{ marginBottom: 4 }}>Last 7 Days of Activity</h3>
         <p className="small">
           Each bar shows how many times you opened a stock page on that day.
         </p>
@@ -341,13 +315,9 @@ export default function Profile() {
             <BarChart data={heatmapData}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
               <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-              <YAxis
-                allowDecimals={false}
-                tick={{ fontSize: 11 }}
-                width={30}
-              />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
               <Tooltip />
-              <Bar dataKey="views" />
+              <Bar dataKey="views" fill="#3EE0C3" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -357,40 +327,6 @@ export default function Profile() {
             Start opening tickers and this chart will light up.
           </p>
         )}
-      </div>
-
-      {/* Quick access to favorites / recent */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Quick Jump</h3>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {favorites.map((s) => (
-            <button
-              key={s}
-              className="btn ghost"
-              type="button"
-              onClick={() => goToSymbol(s)}
-            >
-              ⭐ {s}
-            </button>
-          ))}
-          {recent
-            .filter((s) => !favorites.includes(s))
-            .map((s) => (
-              <button
-                key={s}
-                className="btn ghost"
-                type="button"
-                onClick={() => goToSymbol(s)}
-              >
-                {s}
-              </button>
-            ))}
-          {favorites.length === 0 && recent.length === 0 && (
-            <p className="small" style={{ opacity: 0.8 }}>
-              Use the Home or Stock tabs to start exploring tickers.
-            </p>
-          )}
-        </div>
       </div>
     </div>
   )

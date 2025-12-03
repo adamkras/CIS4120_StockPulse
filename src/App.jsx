@@ -6,8 +6,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './components/Home'
-import StockPage from './components/StockPage'
-import StyleGuide from './components/StyleGuide'
+import StockPage from './components/Stock'
 import Profile from './components/Profile'
 import DiscussionFeed from './components/DiscussionFeed'
 import useFavorites from './hooks/useFavorites'
@@ -47,8 +46,6 @@ export default function App() {
         <Route path="/discussion" element={<DiscussionFeed />} />
 
         <Route path="/profile" element={<Profile />} />
-
-        <Route path="/style" element={<StyleGuide />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

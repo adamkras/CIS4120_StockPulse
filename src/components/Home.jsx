@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Star } from 'lucide-react'
 
-// Simple mock trending lists by timeframe
 const TRENDING_BY_RANGE = {
   HOUR: ['NVDA', 'TSLA', 'AMD', 'META', 'SOFI'],
   DAY: ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AVGO'],
@@ -20,26 +19,20 @@ const STORAGE_FAVORITES = 'sp_favorite_tickers'
 export default function Home() {
   const [ticker, setTicker] = useState('')
   const [error, setError] = useState('')
-  const [range, setRange] = useState('DAY') // 'HOUR' | 'DAY' | 'WEEK'
-
+  const [range, setRange] = useState('DAY')
   const [recent, setRecent] = useState([])
   const [favorites, setFavorites] = useState([])
-
   const navigate = useNavigate()
 
-  // Load recent + favorites from localStorage on mount
   useEffect(() => {
     try {
       const r = JSON.parse(localStorage.getItem(STORAGE_RECENT) || '[]')
       const f = JSON.parse(localStorage.getItem(STORAGE_FAVORITES) || '[]')
       if (Array.isArray(r)) setRecent(r)
       if (Array.isArray(f)) setFavorites(f)
-    } catch {
-      // ignore parse errors
-    }
+    } catch {}
   }, [])
 
-  // Helper to persist arrays
   const saveRecent = (next) => {
     setRecent(next)
     try {
@@ -54,14 +47,11 @@ export default function Home() {
     } catch {}
   }
 
-  // Navigate to a stock and update "recently viewed"
   const goToSymbol = (symbol) => {
     const clean = symbol.trim().toUpperCase()
     if (!clean) return
-
     const next = [clean, ...recent.filter((s) => s !== clean)].slice(0, 10)
     saveRecent(next)
-
     navigate(`/stock/${encodeURIComponent(clean)}`)
   }
 
@@ -77,7 +67,7 @@ export default function Home() {
     setTicker('')
   }
 
-  const handleChipKeyDown = (e, symbol) => {
+  const handleKeyDown = (e, symbol) => {
     if (e.key === 'Enter') goToSymbol(symbol)
   }
 
@@ -96,15 +86,12 @@ export default function Home() {
 
   return (
     <div className="home" style={{ marginTop: 16 }}>
-      {/* Main hero / search card */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <h2 style={{ marginBottom: 4 }}>Welcome to StockPulse</h2>
         <p className="small">
           Search a ticker to see its live price and join the discussion, or start with a popular
           stock below.
         </p>
 
-        {/* Search row */}
         <form
           onSubmit={handleSubmit}
           className="row"
@@ -143,7 +130,6 @@ export default function Home() {
           </p>
         )}
 
-        {/* Trending / timeframe controls */}
         <div style={{ marginTop: 18 }}>
           <div className="space-between" style={{ marginBottom: 8 }}>
             <span className="small" style={{ textTransform: 'uppercase', letterSpacing: 0.06 }}>
@@ -166,14 +152,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div
-            className="row"
-            style={{
-              flexWrap: 'wrap',
-              gap: 8,
-              marginTop: 4,
-            }}
-          >
+          <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
             {trending.map((symbol) => {
               const fav = favorites.includes(symbol)
               return (
@@ -182,7 +161,7 @@ export default function Home() {
                     type="button"
                     className="ticker-chip__symbol"
                     onClick={() => goToSymbol(symbol)}
-                    onKeyDown={(e) => handleChipKeyDown(e, symbol)}
+                    onKeyDown={(e) => handleKeyDown(e, symbol)}
                     aria-label={`View ${symbol} stock`}
                   >
                     {symbol}
@@ -191,9 +170,7 @@ export default function Home() {
                     type="button"
                     className={`ticker-chip__fav ${fav ? 'active' : ''}`}
                     onClick={() => toggleFavorite(symbol)}
-                    aria-label={
-                      fav ? `Remove ${symbol} from favorites` : `Add ${symbol} to favorites`
-                    }
+                    aria-label={fav ? `Remove ${symbol} from favorites` : `Add ${symbol} to favorites`}
                   >
                     <Star size={14} />
                   </button>
@@ -203,7 +180,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Recently viewed */}
         {recent.length > 0 && (
           <div style={{ marginTop: 18 }}>
             <div className="small" style={{ marginBottom: 6 }}>
@@ -216,7 +192,7 @@ export default function Home() {
                   className="tab"
                   style={{ border: 'none', fontSize: 12 }}
                   onClick={() => goToSymbol(symbol)}
-                  onKeyDown={(e) => handleChipKeyDown(e, symbol)}
+                  onKeyDown={(e) => handleKeyDown(e, symbol)}
                   aria-label={`View ${symbol} stock again`}
                 >
                   {symbol}
@@ -226,7 +202,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Favorites */}
         {favorites.length > 0 && (
           <div style={{ marginTop: 18 }}>
             <div className="small" style={{ marginBottom: 6 }}>
@@ -234,7 +209,7 @@ export default function Home() {
             </div>
             <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
               {favorites.map((symbol) => (
-                <div key={symbol} className={`ticker-chip favorited`}>
+                <div key={symbol} className="ticker-chip favorited">
                   <button
                     type="button"
                     className="ticker-chip__symbol"
